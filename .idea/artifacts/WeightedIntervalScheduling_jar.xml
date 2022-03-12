@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="WeightedIntervalScheduling:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/WeightedIntervalScheduling_jar</output-path>
+    <root id="archive" name="WeightedIntervalScheduling.jar">
+      <element id="module-output" name="WeightedIntervalScheduling" />
+    </root>
+  </artifact>
+</component>
