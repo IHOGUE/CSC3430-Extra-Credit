@@ -1,12 +1,9 @@
 
 import java.net.URISyntaxException;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Random;
-import java.util.Arrays;
-import java.io.File;  // Import the File class
-import java.io.FileNotFoundException;  // Import this class to handle errors
-import java.util.Scanner; // Import the Scanner class to read text files
+import java.util.*;
+import java.io.File;  // Import the File class <- neccessary?
+import java.io.FileNotFoundException;  // Import this class to handle errors <- neccessary?
+
 
 class Job{
     public int timeStart;
@@ -16,6 +13,8 @@ class Job{
     public int index = 0;
     public char name;
     public Job p;
+    public boolean usesSelf = false;
+    public Job max;
     public Job (int a, int b, int c){
         this.timeStart = a;
         this.timeEnd = b;
@@ -38,22 +37,21 @@ public class WeightedIntervalS {
         try{
             String name = "test.csv";
             File CSV = new File(WeightedIntervalS.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
-            String input = CSV.getParent() + File.separator + name;
-            File Jim = new File(input);
-            try {
-                //File myObj = new File("src/com/example/helloworld2/resources/test.csv");
-                Scanner myReader = new Scanner(Jim);
-                while (myReader.hasNextLine()) {
-                    String data = myReader.nextLine();
-                    System.out.println(data);
-                }
-                myReader.close();
-            } catch(FileNotFoundException e) {
-                System.out.println("An error occurred.");
-                e.printStackTrace();
-            }
+            String source = CSV.getParent() + File.separator + name;
+            File address = new File(source);
+            Scanner fileRead = new Scanner(address);
+            while (fileRead.hasNextLine()) {
 
-        } catch (URISyntaxException e) {
+                String data = fileRead.nextLine();
+                System.out.println(data);
+            }
+            fileRead.close();
+        } catch(FileNotFoundException e) {
+            System.out.println("The file indicated was not found.");
+            e.printStackTrace();
+        }
+        catch (URISyntaxException e) {
+            System.out.println("URI Syntax Error.");
             e.printStackTrace();
         }
 
@@ -71,6 +69,7 @@ public class WeightedIntervalS {
             int len = rand.nextInt(20 - a) + 1;
             int b = a + len;
             int c = rand.nextInt(10) + 1;
+            int index = 0;
             Job temp = new Job(a,b,c); // 2*i, 2*i+3, i+1
             temp.len = len;
             temp.name = name;
@@ -80,28 +79,31 @@ public class WeightedIntervalS {
             Jobs[i] = temp;
         }
 
-        /*Jobs[2].timeStart = 3;
-        Jobs[1].timeStart = 1;
-        Jobs[4].timeStart = 3;
-        Jobs[0].timeStart = 16;
-        Jobs[3].timeStart = 16;
+        /*Jobs[0].timeStart = 19;
+        Jobs[1].timeStart = 5;
+        Jobs[2].timeStart = 2;
+        Jobs[3].timeStart = 6;
+        Jobs[4].timeStart = 14;
 
-        Jobs[2].timeEnd = 5;
-        Jobs[1].timeEnd = 8;
-        Jobs[4].timeEnd = 10;
-        Jobs[0].timeEnd = 18;
-        Jobs[3].timeEnd = 20;
+        Jobs[0].timeEnd = 20;
+        Jobs[1].timeEnd = 16;
+        Jobs[2].timeEnd = 17;
+        Jobs[3].timeEnd = 16;
+        Jobs[4].timeEnd = 18;
 
+        Jobs[0].weight = 9;
+        Jobs[1].weight = 3;
         Jobs[2].weight = 10;
-        Jobs[1].weight = 2;
-        Jobs[4].weight = 1;
-        Jobs[0].weight = 1;
-        Jobs[3].weight = 3;*/
+        Jobs[3].weight = 5;
+        Jobs[4].weight = 7;*/
 
         Arrays.sort(Jobs, Comparator.comparing(Job::GetStart)); //this puts in nice order, but how much time complexity added? adds 7.2 milliseconds at 10,000 samples
         Arrays.sort(Jobs, Comparator.comparing(Job::GetEnd));
+        int counter = 0;
         for (Job ree : Jobs){
             ree.Print();
+            ree.index = counter;
+            counter++;
         }
 
         Print("\np equals:");
@@ -128,11 +130,14 @@ public class WeightedIntervalS {
         // loop without function?
         int numMax = 0;
         Job jobMax = null;
-        Print("Beginning of Max"); //                                   <----------------- begining of max
+        int jMax = 0;
+        List<Character> solutionPath = new ArrayList<>();
+       //                                   <----------------- begining of max
         //Max[0] = 0;
         MaxMap.put(null, 0);
         int max1 = 0;
         int max2 = 0;
+        boolean nonP = true;
         for (int j = 1; j < size +1; j++){
             if (MaxMap.get(Jobs[j-1].p) == null){
                 max1 = 0;
@@ -142,15 +147,31 @@ public class WeightedIntervalS {
             if (j >=2){
                 max2 = MaxMap.get(Jobs[j-2]);
             }
-            int sum = Math.max(Jobs[j-1].weight + max1, max2);
-
+            int sum = 0;
+//---------------------------------------------------------------------------------------------------j.max scrounging
+            if (Jobs[j-1].weight + max1 > max2){
+                sum = Jobs[j-1].weight + max1;
+                Jobs[j-1].max = Jobs[j-1].p;
+                Jobs[j-1].usesSelf = true;
+                if (j > 1){
+                    //Jobs[j-2].usesSelf = false;
+                }
+            } else{
+                sum = max2;
+                nonP = false;
+                //Jobs[j-1].usesSelf = false;
+                Jobs[j-1].max = Jobs[j-2];
+            }
             // total max
+            MaxMap.put(Jobs[j-1],sum);
             if(sum > numMax){
                 numMax = sum;
                 jobMax = Jobs[j-1];
+                jMax = j;
             }
-            MaxMap.put(Jobs[j-1],sum);
+
         }
+        Print("Beginning of Max");
         for (int j = 0; j < size; j++){
             Print(MaxMap.get(Jobs[j]));
         }
@@ -159,30 +180,23 @@ public class WeightedIntervalS {
         long fin = endTime - startTime;
         Print("\n"+fin+" milliseconds"); //-------------------------------------   time
         String message = "";
+        //--------------------------------------------------------------------------------------------------------------------------------checker
 
         message += String.valueOf(numMax) + " is the highest value by taking job";
-        Job checker = jobMax;
-        while (checker != null){
-            if (checker.p == null){
-                message +=  " " + checker.name;
-            }
-            else if(checker.p.p == null){
-                if (message.endsWith("b")){
-                    message +=  "s " + checker.name + " and";
-                } else{
-                    message +=  checker.name + ", and";
-                }
-            }
-            else{
-                if (message.endsWith("b")){
-                    message += "s " + checker.name + ", ";
-                } else{
-                    message += checker.name + ", ";
-                }
-            }
-            checker = checker.p;
-        }
+        Job checker = jobMax; // checker holds the max job rn
+
+
         Print(message);
+        Job temp = jobMax;
+        while(temp != null){
+            if (temp.usesSelf) {        // complexity O(n)
+                solutionPath.add(temp.name);
+            }
+            temp = temp.max;
+        }
+        if (!nonP){
+            Print(solutionPath);
+        }
         //                  Grid Printer
         Print("--------------------------------------------------------------------------------------------------------------------------");
         String[][] grid = new String[21][size+1];
@@ -217,3 +231,66 @@ public class WeightedIntervalS {
     }
 
 }
+/*
+
+ while (checker != null && nonP){
+            if (checker.p == null){     // meaning if nothing else is compat, this is the best
+                message +=  " " + checker.name;
+            }
+            else if(checker.p.p == null){
+                if (message.endsWith("b")){
+                    message +=  "s " + checker.name + " and";
+                } else{
+                    message +=  checker.name + ", and";
+                }
+            }
+            else{
+                if (message.endsWith("b")){
+                    message += "s " + checker.name + ", ";
+                } else{
+                    message += checker.name + ", ";
+                }
+            }
+            checker = checker.p;
+        }
+
+ */
+
+
+
+
+
+
+/*
+solutionPath.add(String.valueOf(jobMax.name));
+                if (solutionPath.size() > 1 && jobMax.index > 1 && MaxMap.get(jobMax) > MaxMap.get(Jobs[jobMax.index-1])){
+                    if (jobMax.p == null){
+
+                    }
+                    else if(jobMax.p.name != solutionPath.get(solutionPath.size()-2)){
+                        solutionPath.remove(solutionPath.size()-2);
+                    }
+
+                    Print("SOMeTIUNG)");
+                } else{
+                    //solutionPath.remove(solutionPath.size()-1);
+                    if (jobMax.index > 0){
+                        Print(jobMax.weight + " versus  " + MaxMap.get(Jobs[jobMax.index-1]));
+                    }
+
+                }
+ */
+
+
+/*
+ if (max2 > max1){
+                    solutionPath.add(String.valueOf(Jobs[j-1].name));
+                } else{
+                    if (j >= 2){
+                        solutionPath.add(String.valueOf(Jobs[j-2].name));
+
+                    } else{
+                        solutionPath.add(String.valueOf(Jobs[j-1].name));
+                    }
+                }
+ */
