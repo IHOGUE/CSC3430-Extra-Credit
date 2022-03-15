@@ -56,7 +56,7 @@ public class WeightedIntervalS {
         int numJobs = 0;
         int timeMax = 20;
         Random rand = new Random();
-        boolean color = true;
+        boolean color = false;
         int weightMax = 10;
 
         long startTime = System.currentTimeMillis();
@@ -119,8 +119,10 @@ public class WeightedIntervalS {
                         fileRead.close();
                         timeMax = 4 * numJobs; // might not be good enough
                     }catch(FileNotFoundException e) {
-                        System.out.println("File not found.");
-                        e.printStackTrace();
+                        String error = "File ";
+                        error += args[0] + " not found.";
+                        System.out.println(error);
+                        System.exit(1);
                     } catch (URISyntaxException e) {
                         System.out.println("URI Syntax Exeption.");
                         e.printStackTrace();
@@ -184,23 +186,27 @@ public class WeightedIntervalS {
                     fileRead.close();
                     timeMax = 4 * numJobs; // might not be good enough
                 }catch(FileNotFoundException e) {
-                    System.out.println("File not found.");
-                    e.printStackTrace();
+                    String error = "File ";
+                    error += args[0] + " not found.";
+                    System.out.println(error);
+                    System.exit(1);
                 } catch (URISyntaxException e) {
                     System.out.println("URI Syntax Exeption.");
                     e.printStackTrace();
                 }
                 break;
             default:
-                Print("Invalid input [default]");
-                Print(args.length);
+                String error = "";
+                for (String i : args){
+                    error += i + " ";
+                }
+                Print("Invalid argument list:" + error);
+                Print("Expected nothing - for no color and random");
+                Print("Or Expected (c) - for color and random");
+                Print("Or Expected (name of file) - for no color read file");
+                Print("Or Expected (c) (name of file) - for color and read file");
+                System.exit(1);
         }
-
-
-
-
-
-
 
         if (args.length == 0 || (args.length == 1 && color)){
             numJobs = 5;
@@ -215,12 +221,11 @@ public class WeightedIntervalS {
                 count++;
             }
         }
-        HashMap<Job, Integer> MaxMap = new HashMap<>(numJobs + 1); // initial capacity good? size or size + 1?
+        HashMap<Job, Integer> MaxMap = new HashMap<>(numJobs);
        if (args.length == 0 || (args.length == 1 && color)){
            // easy job initiate
            String name = "";
            for (int i = 0; i < numJobs; i++) {
-               // to give each job a name in alphabetical order...  ends at z, whatever ascii is past z is next job
                if (numJobs > 26){
                    name = "1";
                } else{
@@ -245,16 +250,14 @@ public class WeightedIntervalS {
                // random weight
                int c = rand.nextInt(weightMax) + 1;
                Job temp = new Job(a,b,c); // 2*i, 2*i+3, i+1
-               temp.name = String.valueOf(name); // not part of constructor, not sure if i'm keeping name variable
+               temp.name = String.valueOf(name);
                // add job to array of jobs
                Jobs[i] = temp;
            }
        }
-
-
-        /*Jobs[0].timeStart = 19;
+        /*Jobs[0].timeStart = 2;
         Jobs[1].timeStart = 5;
-        Jobs[2].timeStart = 2;
+        Jobs[2].timeStart = 0;
         Jobs[3].timeStart = 6;
         Jobs[4].timeStart = 14;
 
@@ -264,41 +267,39 @@ public class WeightedIntervalS {
         Jobs[3].timeEnd = 16;
         Jobs[4].timeEnd = 18;
 
-        Jobs[0].weight = 9;
-        Jobs[1].weight = 3;
+        Jobs[0].weight = 4;
+        Jobs[1].weight = 4;
         Jobs[2].weight = 10;
         Jobs[3].weight = 5;
         Jobs[4].weight = 7;*/
 
-        Arrays.sort(Jobs, Comparator.comparing(Job::GetStart)); //this puts in nice order, but how much time complexity added? adds 7.2 milliseconds at 10,000 samples
+        // O(nlog(n))
+        Arrays.sort(Jobs, Comparator.comparing(Job::GetStart));
+        // ^ this puts in nice order, but how much time complexity added? adds 7.2 milliseconds at 10,000 samples
+        // O(nlog(n))
         Arrays.sort(Jobs, Comparator.comparing(Job::GetEnd));
-        //for (Job ree : Jobs){
-        //    ree.Print();
-        //}
 
         // --------------------------------------------------------------------------------------------find p?
         // better way to do this?
+        // O(n^2) but in practice will be way less, closer to O(n)
         for(int i = 0; i < numJobs; i++){
             int start = Jobs[i].timeStart;
             for(int j = i ; j > -1; j--){
                 if (Jobs[j].timeEnd < start){   // breaks at first compatible index found
                     Jobs[i].p = Jobs[j];
                     break;
-                }
-            } // no compatible index was found
+                } // otherwise no compatible index was found
+            }
         }
-
-
-        // loop without function?
+        //  heart of the algorithm: this builds bottom to top the max weight possible for each job into MaxMap
         int numMax = 0;
         Job jobMax = null;
-        List<String> solutionPath = new ArrayList<>();
-       //                                   <----------------- begining of max
-        MaxMap.put(null, 0);
+        List<String> solutionPath = new ArrayList<>(); // keeps track of jobs to take for maximum weight
+        MaxMap.put(null, 0); // if null is sent into map, returns max value of 0
         int max1 = 0; // current job value + job.p max value
         int max2 = 0; // 1 index lower than current job's max value
         for (int j = 1; j < numJobs +1; j++){
-            if (MaxMap.get(Jobs[j-1].p) == null){
+            if (MaxMap.get(Jobs[j-1].p) == null){ // max is zero is j doesn't have a compatible index
                 max1 = 0;
             } else{
                 max1 = MaxMap.get(Jobs[j-1].p);
@@ -314,7 +315,7 @@ public class WeightedIntervalS {
                 Jobs[j-1].usesSelf = true;
             } else{
                 sum = max2;
-                if (j >= 2){
+                if (j >= 2){ // <- maybe not neccessary
                     Jobs[j-1].max = Jobs[j-2];
                 }
             }
@@ -325,12 +326,13 @@ public class WeightedIntervalS {
                 jobMax = Jobs[j-1];
             }
         }
-        long endTime = System.currentTimeMillis();
-        long fin = endTime - startTime;
-        Print("\n"+fin+" milliseconds"); //-------------------------------------   time
+
         String message = "";
         //--------------------------------------------------------------------------------------------------------------------------------checker
-
+        Print("For jobs:");
+        for (Job i : Jobs){
+            i.Print();
+        }
         // temp traverses the path of greatest weight
         Job temp = jobMax;
         while(temp != null){
@@ -339,14 +341,17 @@ public class WeightedIntervalS {
             }
             temp = temp.max;
         }
-        message += String.valueOf(numMax) + " is the highest value by taking job";
-        if (solutionPath.size() > 0){
+        message += "\n" + String.valueOf(numMax) + " is the highest weight sum possible by taking job";
+        if (solutionPath.size() > 1){
             message += 's';
         }
-        Print(message);
         //Collections.sort(solutionPath); // sort alphabetically [time complexity?]
-        Print(solutionPath);
+        Print(message + " " + String.valueOf(solutionPath));
 
+       //Print(solutionPath);
+        long endTime = System.currentTimeMillis();
+        long fin = endTime - startTime;
+        Print("\n"+fin+" milliseconds"); //-------------------------------------   time
 
         //                  Grid Printer
         Print("--------------------------------------------------------------------------------------------------------------------------");
@@ -371,7 +376,7 @@ public class WeightedIntervalS {
         if (!color){
             GridBuilder(numJobs,timeMax,gridArray,gridDisplay);
         } else{
-            GridBuilderColor(numJobs,timeMax,gridArray,gridDisplay, solutionPath, Jobs);
+            GridBuilderColor(numJobs,timeMax,gridArray,gridDisplay, solutionPath);
         }
 
          // gets rid of last extra \n
@@ -395,7 +400,7 @@ public class WeightedIntervalS {
         }
         gridDisplay.deleteCharAt(gridDisplay.length()-1);
     }
-    public static void GridBuilderColor(int numJobs, int timeMax, String[][] gridArray, StringBuilder gridDisplay, List<String> solutionPath, Job[] Jobs) {
+    public static void GridBuilderColor(int numJobs, int timeMax, String[][] gridArray, StringBuilder gridDisplay, List<String> solutionPath) {
         String currentBox = "";
         //int currentY = 0;
         int currentX = 0;
@@ -406,18 +411,17 @@ public class WeightedIntervalS {
                     //System.out.printf("%-6s", "[]");
                 } else {
                     if (y > 0 && solutionPath.contains(gridArray[x][y])) {        //y > 1 && solutionPath.contains(Jobs[y-1].name
-                        //gridDisplay.append(String.format("%-6s",ANSI_BLACK_BACKGROUND + ANSI_WHITE + gridArray[x][y]  + ANSI_RESET));
-                        if (currentBox == gridArray[x][y]){
-                            gridDisplay.append(String.format("%-20s", ANSI_BLACK_BACKGROUND + ANSI_WHITE + gridArray[x][y] + ANSI_RESET));
+                        if (Objects.equals(currentBox, gridArray[x][y])){
+                            gridDisplay.append(String.format("%-20s", ANSI_YELLOW_BACKGROUND  + ANSI_BLUE + gridArray[x][y] + ANSI_RESET));
                             //System.out.printf("%-20s", ANSI_BLACK_BACKGROUND + ANSI_WHITE + gridArray[x][y] + ANSI_RESET);
                         } else{
-                            gridDisplay.append(String.format("%-16s", ANSI_BLACK_BACKGROUND + ANSI_WHITE + gridArray[x][y]));
+                            gridDisplay.append(String.format("%-16s", ANSI_YELLOW_BACKGROUND  + ANSI_BLUE + gridArray[x][y]));
                             //System.out.printf("%-16s", ANSI_BLACK_BACKGROUND + ANSI_WHITE + gridArray[x][y]);
                         }
                         currentBox = gridArray[x][y];
                         currentX = x;
                     } else if(Objects.equals(currentBox, gridArray[currentX][y])){
-                        gridDisplay.append(String.format("%-16s", ANSI_BLACK_BACKGROUND + ANSI_WHITE + gridArray[x][y]));
+                        gridDisplay.append(String.format("%-16s", ANSI_YELLOW_BACKGROUND + ANSI_BLUE + gridArray[x][y]));
                         //System.out.printf("%-16s", ANSI_BLACK_BACKGROUND + ANSI_WHITE + gridArray[x][y]);
                     }else {
                         gridDisplay.append(String.format("%-10s", ANSI_RESET + gridArray[x][y]));
