@@ -1,7 +1,7 @@
 import java.net.URISyntaxException;
 import java.util.*;
-import java.io.File;  // Import the File class <- neccessary?
-import java.io.FileNotFoundException;  // Import this class to handle errors <- neccessary?
+import java.io.File;  // Import the File class <- necessary?
+import java.io.FileNotFoundException;  // Import this class to handle errors <- necessary?
 
 
 class Job{
@@ -9,9 +9,9 @@ class Job{
     public int timeEnd;
     public int weight;
     public String name;
-    public Job p;
-    public Job max;
-    public boolean usesSelf = false;
+    public Job p; // first compatible job available
+    public Job max; // keeps track of what job has the maximum weight for the currently selected job (the job one index below or the current job + job.p)
+    public boolean usesSelf = false; // tracks whether or not the current job is included in it's maximum weight
     public Job (int a, int b, int c){
         this.timeStart = a;
         this.timeEnd = b;
@@ -37,10 +37,10 @@ class GridVariables{
     public  int numJobs = 0;
     public  int timeMax = 20;
     public  int weightMax = 10;
-    public  Stack<Job> jobInput = new Stack<>();
+    public  Stack<Job> jobInput = new Stack<>(); // able to take jobs from file to store in array later
+    public boolean inputFromFile = false; // bool to check if jobs are being read or random generated
 }
 
-// store requests on csv file
 public class WeightedIntervalS {
     public static final String ANSI_RESET = "\u001B[0m";
     public static final String ANSI_BLACK = "\u001B[30m";
@@ -60,70 +60,141 @@ public class WeightedIntervalS {
     public static final String ANSI_CYAN_BACKGROUND = "\u001B[46m";
     public static final String ANSI_WHITE_BACKGROUND = "\u001B[47m";
 
-    public static String[] EndMyMisery = new String[2];
-
     public static void main(String[] args) {
         GridVariables gridVariables = new GridVariables();
+        Map<String, String> settingsMap = new HashMap<>();
+        String[] settingNames = new String[] {"DISPLAY_GRID", "GRID_COLOR","LOAD_FILE_NAME","NUMBER_OF_JOBS","MAXIMUM_TIME","MAXIMUM_WEIGHT"};
+        for (String i : settingNames){
+            settingsMap.put(i,null);
+        }
 
         Random rand = new Random();
         boolean color = false;
-        EndMyMisery = args;
-        //EndMyMisery[0] = "c";
-        //EndMyMisery[1] = "test.csv";
-        //EndMyMisery[0] = "test.csv";
+        boolean displayGrid = true;
 
         long startTime = System.currentTimeMillis();
+        try{
+            String name = "settings.txt";
+            File local = new File(WeightedIntervalS.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
+            String source = local.getParent() + File.separator + name;
+            File address = new File(source);
+            String scannerInput;
+            Scanner fileRead = new Scanner(address);
 
-        switch(EndMyMisery.length){
-            case 0:
-            break;
-            case 1:
-                if (Objects.equals(EndMyMisery[0], "c")){
-                    color = true;
-                } else{
-                    gridVariables.fileName = EndMyMisery[0];
-                    FileRead(gridVariables);
+            while (fileRead.hasNextLine()) {
+
+                scannerInput = fileRead.nextLine();
+                Scanner lineRead = new Scanner(scannerInput);
+                String currentName = "";
+                lineRead.useDelimiter("=");
+
+                while (lineRead.hasNextLine()){
+                    try{
+                        scannerInput = lineRead.next();
+                    }
+                    catch (Exception e) {
+                        Print("Error: setting " + currentName + " left blank");
+                        System.exit(1);
+                    }
+                    scannerInput = scannerInput.strip();
+                    if (settingsMap.containsKey(scannerInput)){
+                        currentName = scannerInput;
+                    }
+                    else if (scannerInput.startsWith("//")){
+                        continue;
+                    }
+                    if (!settingsMap.containsKey(scannerInput)){
+                        if (scannerInput.equals("\"\"")){
+                            settingsMap.put(currentName,null);
+                        }
+                        else if (scannerInput.contains("\"")){
+                            scannerInput = scannerInput.replaceAll("\"","");
+                            settingsMap.put(currentName,scannerInput);
+                        }
+                        else{
+                            settingsMap.put(currentName,scannerInput);
+                        }
+                    }
                 }
-            break;
-            case 2:
-                if (Objects.equals(EndMyMisery[0], "c")){
-                    color = true;
-                } else{
-                    String error = EndMyMisery[0];
-                    Print("Invalid input: c or nothing expected " + error + " given");
-                    System.exit(1);
-                }
-                gridVariables.fileName = EndMyMisery[1];
-                FileRead(gridVariables);
+            }
+            fileRead.close();
+        }catch(FileNotFoundException e) {
+            System.out.println("Error: settings.txt not found");
+        } catch (URISyntaxException e) {
+            System.out.println("URI Syntax Exeption");
+            e.printStackTrace();
+        }
+
+        for (String i : settingNames){
+            switch (i){ // should i convert to "enhanced" switch?
+                case "DISPLAY_GRID":
+                    if (Objects.equals(settingsMap.get(i), "false") || Objects.equals(settingsMap.get(i), "true")){
+                        displayGrid = Boolean.parseBoolean((settingsMap.get(i)));
+                    }
+                    else{
+                        Print("Error: value for setting " + i + " \"" + settingsMap.get(i) + "\" must be true or false");
+                        System.exit(1);
+                    }
+                    break;
+                case "GRID_COLOR":
+                    if (Objects.equals(settingsMap.get(i), "false") || Objects.equals(settingsMap.get(i), "true")){
+                        color = Boolean.parseBoolean((settingsMap.get(i)));
+                    }
+                    else{
+                        Print("Error: value for setting " + i + " \"" + settingsMap.get(i) + "\" must be true or false");
+                        System.exit(1);
+                    }
+                    break;
+                case "LOAD_FILE_NAME":
+                    gridVariables.fileName = settingsMap.get(i);
+                    if (gridVariables.fileName != null){
+                        gridVariables.inputFromFile = true;
+                    }
+                    break;
+                case "NUMBER_OF_JOBS":
+                    try{
+                        gridVariables.numJobs = Integer.parseInt(settingsMap.get(i));
+                    } catch (NumberFormatException e) {
+                        Print("Error: value for setting " + i + " \"" + settingsMap.get(i) + "\" is not a number");
+                        System.exit(1);
+                    }
+                    break;
+                case "MAXIMUM_TIME":
+                    try{
+                        gridVariables.timeMax = Integer.parseInt(settingsMap.get(i));
+                    } catch (NumberFormatException e) {
+                        Print("Error: value for setting " + i + " \"" + settingsMap.get(i) + "\" is not a number");
+                        System.exit(1);
+                    }
+                    break;
+                case "MAXIMUM_WEIGHT":
+                    try{
+                        gridVariables.weightMax = Integer.parseInt(settingsMap.get(i));
+                    } catch (NumberFormatException e) {
+                        Print("Error: value for setting " + i + " \"" + settingsMap.get(i) + "\" is not a number");
+                        System.exit(1);
+                    }
+                    break;
+            }
+            if (gridVariables.inputFromFile){
                 break;
-            default:
-                String error = "";
-                for (String i : EndMyMisery){
-                    error += i + " ";
-                }
-                Print("Invalid argument list: " + error);
-                Print("Expected nothing - for no color and random job generation");
-                Print("Or Expected (c) - for color and random job generation");
-                Print("Or Expected (name of file) - for no color and jobs read from csv file");
-                Print("Or Expected (c) (name of file) - for color and jobs read from csv file");
-                System.exit(1);
-        }
-
-        if (EndMyMisery.length == 0 || (EndMyMisery.length == 1 && color)){
-            gridVariables.numJobs = 5;
-            gridVariables.timeMax = 20;
-            gridVariables.weightMax = 10;
-        }
-        Job[] Jobs = new Job[gridVariables.numJobs];
-        if (EndMyMisery.length > 0){
-            int count = 0;
-            while (!gridVariables.jobInput.empty()){
-                Jobs[count] = gridVariables.jobInput.pop();
-                count++;
             }
         }
+
+        if (settingsMap.get("LOAD_FILE_NAME") != null){
+            FileRead(gridVariables);
+        }
+
+        Job[] Jobs = new Job[gridVariables.numJobs];
+
+        int counter = 0;
+        while (!gridVariables.jobInput.empty()){
+            Jobs[counter] = gridVariables.jobInput.pop();
+            counter++;
+        }
+
         HashMap<Job, Integer> MaxMap = new HashMap<>( gridVariables.numJobs);
-       if (EndMyMisery.length == 0 || (EndMyMisery.length == 1 && color)){
+       if (settingsMap.get("LOAD_FILE_NAME") == null){
            // easy random job initiation
            String name = "";
            for (int i = 0; i <  gridVariables.numJobs; i++) {
@@ -258,32 +329,34 @@ public class WeightedIntervalS {
         Print("\n"+fin+" milliseconds"); //-------------------------------------   time
 
         //                  Grid Printer
-        String[][] gridArray = new String[ gridVariables.timeMax+1][ gridVariables.numJobs+1];
-        // initialize bottom row of grid, the x axis of time
-        for (int i = 0; i <= gridVariables.timeMax ; i++){
-            gridArray[i][0] = String.valueOf(i);
-        }
-        int count =  gridVariables.numJobs;
-        for (Job j: Jobs){
-            gridArray[j.timeEnd][count] = String.valueOf(j.name);
-            gridArray[j.timeStart][count] = String.valueOf(j.name);
-            for (int i = j.timeStart + 1; i < j.timeEnd; i++){
-                gridArray[i][count] = String.valueOf(j.weight);
+        if (displayGrid){
+            String[][] gridArray = new String[ gridVariables.timeMax+1][ gridVariables.numJobs+1];
+            // initialize bottom row of grid, the x axis of time
+            for (int i = 0; i <= gridVariables.timeMax ; i++){
+                gridArray[i][0] = String.valueOf(i);
             }
-            count--;
-        }
+            int count =  gridVariables.numJobs;
+            for (Job j: Jobs){
+                gridArray[j.timeEnd][count] = String.valueOf(j.name);
+                gridArray[j.timeStart][count] = String.valueOf(j.name);
+                for (int i = j.timeStart + 1; i < j.timeEnd; i++){
+                    gridArray[i][count] = String.valueOf(j.weight);
+                }
+                count--;
+            }
 
-        StringBuilder gridDisplay = new StringBuilder();
-        if (!color){
-            GridBuilder(gridVariables.numJobs,gridVariables.timeMax,gridArray,gridDisplay);
-        } else{
-            GridBuilderColor(gridVariables.numJobs,gridVariables.timeMax,gridArray,gridDisplay, solutionPath);
+            StringBuilder gridDisplay = new StringBuilder();
+            if (!color){
+                GridBuilder(gridVariables.numJobs,gridVariables.timeMax,gridArray,gridDisplay);
+            } else{
+                GridBuilderColor(gridVariables.numJobs,gridVariables.timeMax,gridArray,gridDisplay, solutionPath);
+            }
+            StringBuilder border = new StringBuilder();
+            border.append("-".repeat(Math.max(0, (gridVariables.timeMax * 6) + 2)));
+            Print(border);
+            Print(gridDisplay);
+            Print(border);
         }
-        StringBuilder border = new StringBuilder();
-        border.append("-".repeat(Math.max(0, (gridVariables.timeMax * 6) + 2)));
-        Print(border);
-        Print(gridDisplay);
-        Print(border);
     }
 
     public static <T> void Print(T input){
@@ -343,6 +416,7 @@ public class WeightedIntervalS {
             File address = new File(source);
             String scannerInput;
             Scanner fileRead = new Scanner(address);
+            int i = 0;
 
             while (fileRead.hasNextLine()) {
 
@@ -359,8 +433,10 @@ public class WeightedIntervalS {
                             Job temp = new Job();
                             temp.timeStart = Integer.parseInt(scannerInput);
                             gridVariables.jobInput.push(temp);
+                            if (gridVariables.inputFromFile){
+                                gridVariables.numJobs++;
+                            }
                             fieldIndex++;
-                            gridVariables.numJobs++;
                             break;
                         case 1:
                             gridVariables.jobInput.peek().timeEnd = Integer.parseInt(scannerInput);
@@ -391,16 +467,17 @@ public class WeightedIntervalS {
                 } else{
                     name = "";
                 }
-                int intToChar = 65 + gridVariables.numJobs - 1;
-                int wrapAround = (26 * ((gridVariables.numJobs - 1)/26)); // 90 is Z, this wraps around to A after Z
+                int intToChar = 65 + i;
+                int wrapAround = (26 * ((i)/26)); // 90 is Z, this wraps around to A after Z
                 if (wrapAround > 0){
                     intToChar = intToChar - wrapAround;
-                    wrapAround = wrapAround - 25*((gridVariables.numJobs - 1)/26);
+                    wrapAround = wrapAround - 25*((i)/26);
                     name = String.valueOf(wrapAround + 1);
                 }
                 char letter = (char)intToChar;
                 name += letter;
                 gridVariables.jobInput.peek().name = name;
+                i++;
             }
             fileRead.close();
         }catch(FileNotFoundException e) {
@@ -414,21 +491,3 @@ public class WeightedIntervalS {
         }
     }
 }
-/*
-
-if ( gridVariables.numJobs > 26){
-                   name = "1";
-               } else{
-                   name = "";
-               }
-               int intToChar = 65 + i;
-               int wrapAround = (26 * (i/26)); // 90 is Z, this wraps around to A after Z
-               if (wrapAround > 0){
-                   intToChar = intToChar - wrapAround;
-                   wrapAround = wrapAround - 25*(i/26);
-                   name = String.valueOf(wrapAround + 1);
-               }
-               char letter = (char)intToChar;
-               name += letter;
-
- */
