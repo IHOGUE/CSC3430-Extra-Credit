@@ -31,6 +31,7 @@ class Job{
     public int GetStart(){
         return timeStart;
     }
+    public String GetName(){return name;}
 }
 class GridVariables{
     public  String fileName;
@@ -249,7 +250,10 @@ public class WeightedIntervalS {
         //Arrays.sort(Jobs, Comparator.comparing(Job::GetStart));
         // ^ this puts in nice order, but how much time complexity added? adds 7.2 milliseconds at 10,000 samples
         // O(nlog(n))
+        Job[] unsortedJobs = new Job[Jobs.length];
+        unsortedJobs = Jobs.clone();
         Arrays.sort(Jobs, Comparator.comparing(Job::GetEnd));
+        Arrays.sort(unsortedJobs, Comparator.comparing(Job::GetName));
 
         // --------------------------------------------------------------------------------------------find p?
         // better way to do this?
@@ -336,7 +340,7 @@ public class WeightedIntervalS {
                 gridArray[i][0] = String.valueOf(i);
             }
             int count =  gridVariables.numJobs;
-            for (Job j: Jobs){
+            for (Job j: unsortedJobs){
                 gridArray[j.timeEnd][count] = String.valueOf(j.name);
                 gridArray[j.timeStart][count] = String.valueOf(j.name);
                 for (int i = j.timeStart + 1; i < j.timeEnd; i++){
@@ -428,6 +432,10 @@ public class WeightedIntervalS {
 
                 while (lineRead.hasNextLine()){
                     scannerInput = lineRead.next();
+                    scannerInput = scannerInput.strip();
+                    if (scannerInput.matches("[a-zA-Z+]")){
+                        continue;
+                    }
                     switch (fieldIndex){
                         case 0:
                             Job temp = new Job();
