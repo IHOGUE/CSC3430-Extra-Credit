@@ -23,7 +23,7 @@ class Job{
     }
 
     public void Print(){
-        System.out.println(timeStart + ", " + timeEnd + ", " + weight + ", " + name);
+        System.out.println(name + ", " + timeStart + ", " + timeEnd + ", " + weight);
     }
     public int GetEnd(){
         return timeEnd;
@@ -31,6 +31,13 @@ class Job{
     public int GetStart(){
         return timeStart;
     }
+}
+class GridVariables{
+    public  String fileName;
+    public  int numJobs = 0;
+    public  int timeMax = 20;
+    public  int weightMax = 10;
+    public  Stack<Job> jobInput = new Stack<>();
 }
 
 // store requests on csv file
@@ -52,181 +59,75 @@ public class WeightedIntervalS {
     public static final String ANSI_PURPLE_BACKGROUND = "\u001B[45m";
     public static final String ANSI_CYAN_BACKGROUND = "\u001B[46m";
     public static final String ANSI_WHITE_BACKGROUND = "\u001B[47m";
+
+    public static String[] EndMyMisery = new String[2];
+
     public static void main(String[] args) {
-        int numJobs = 0;
-        int timeMax = 20;
+        GridVariables gridVariables = new GridVariables();
+
         Random rand = new Random();
         boolean color = false;
-        int weightMax = 10;
+        EndMyMisery = args;
+        //EndMyMisery[0] = "c";
+        //EndMyMisery[1] = "test.csv";
+        //EndMyMisery[0] = "test.csv";
 
         long startTime = System.currentTimeMillis();
-        Stack<Job> jobInput = new Stack<>();
-        switch(args.length){
+
+        switch(EndMyMisery.length){
             case 0:
             break;
             case 1:
-                if (Objects.equals(args[0], "c")){
+                if (Objects.equals(EndMyMisery[0], "c")){
                     color = true;
                 } else{
-                    try{
-                        String name = args[0];
-                        File local = new File(WeightedIntervalS.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
-                        String source = local.getParent() + File.separator + name;
-                        File address = new File(source);
-                        String scannerInput;
-                        Scanner fileRead = new Scanner(address);
-
-                        while (fileRead.hasNextLine()) {
-
-                            scannerInput = fileRead.nextLine();
-                            Scanner lineRead = new Scanner(scannerInput);
-                            lineRead.useDelimiter(",");
-
-                            int fieldIndex = 0; // keeps track of what to put in Course object through the switch case
-
-                            while (lineRead.hasNextLine()){
-                                scannerInput = lineRead.next();
-                                switch (fieldIndex){
-                                    case 0:
-                                        Job temp = new Job();
-                                        temp.timeStart = Integer.parseInt(scannerInput);
-                                        jobInput.push(temp);
-                                        fieldIndex++;
-                                        numJobs++;
-                                        break;
-                                    case 1:
-                                        jobInput.peek().timeEnd = Integer.parseInt(scannerInput);
-                                        fieldIndex++;
-                                        break;
-                                    case 2:
-                                        jobInput.peek().weight = Integer.parseInt(scannerInput);
-                                        fieldIndex++;
-                                        break;
-                                }
-                            }
-                            String letterString = "";
-                            int intToChar = 65 + numJobs-1;
-                            int wrapAround = (26 * ((numJobs-1)/26)); // 90 is Z, this wraps around to A after Z
-                            if (wrapAround > 0){
-                                intToChar = intToChar - wrapAround;
-                                wrapAround = wrapAround - 25;
-                                letterString = String.valueOf(wrapAround + 1);
-                            }
-                            char letter = (char)intToChar;
-                            letterString += letter;
-                            jobInput.peek().name = letterString;
-                        }
-                        fileRead.close();
-                        timeMax = 4 * numJobs; // might not be good enough
-                    }catch(FileNotFoundException e) {
-                        String error = "File ";
-                        error += args[0] + " not found.";
-                        System.out.println(error);
-                        System.exit(1);
-                    } catch (URISyntaxException e) {
-                        System.out.println("URI Syntax Exeption.");
-                        e.printStackTrace();
-                    }
+                    gridVariables.fileName = EndMyMisery[0];
+                    FileRead(gridVariables);
                 }
             break;
             case 2:
-                if (Objects.equals(args[0], "c")){
+                if (Objects.equals(EndMyMisery[0], "c")){
                     color = true;
                 } else{
-                    Print("Invalid input: c expected");
-                }
-                try{
-                    String name = args[1];
-                    File local = new File(WeightedIntervalS.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
-                    String source = local.getParent() + File.separator + name;
-                    File address = new File(source);
-                    String scannerInput;
-                    Scanner fileRead = new Scanner(address);
-
-                    while (fileRead.hasNextLine()) {
-
-                        scannerInput = fileRead.nextLine();
-                        Scanner lineRead = new Scanner(scannerInput);
-                        lineRead.useDelimiter(",");
-
-                        int fieldIndex = 0; // keeps track of what to put in Course object through the switch case
-
-                        while (lineRead.hasNextLine()){
-                            scannerInput = lineRead.next();
-                            switch (fieldIndex){
-                                case 0:
-                                    Job temp = new Job();
-                                    temp.timeStart = Integer.parseInt(scannerInput);
-                                    jobInput.push(temp);
-                                    fieldIndex++;
-                                    numJobs++;
-                                    break;
-                                case 1:
-                                    jobInput.peek().timeEnd = Integer.parseInt(scannerInput);
-                                    fieldIndex++;
-                                    break;
-                                case 2:
-                                    jobInput.peek().weight = Integer.parseInt(scannerInput);
-                                    fieldIndex++;
-                                    break;
-                            }
-                        }
-                        String letterString = "";
-                        int intToChar = 65 + numJobs-1;
-                        int wrapAround = (26 * ((numJobs-1)/26)); // 90 is Z, this wraps around to A after Z
-                        if (wrapAround > 0){
-                            intToChar = intToChar - wrapAround;
-                            wrapAround = wrapAround - 25;
-                            letterString = String.valueOf(wrapAround + 1);
-                        }
-                        char letter = (char)intToChar;
-                        letterString += letter;
-                        jobInput.peek().name = letterString;
-                    }
-                    fileRead.close();
-                    timeMax = 4 * numJobs; // might not be good enough
-                }catch(FileNotFoundException e) {
-                    String error = "File ";
-                    error += args[0] + " not found.";
-                    System.out.println(error);
+                    String error = EndMyMisery[0];
+                    Print("Invalid input: c or nothing expected " + error + " given");
                     System.exit(1);
-                } catch (URISyntaxException e) {
-                    System.out.println("URI Syntax Exeption.");
-                    e.printStackTrace();
                 }
+                gridVariables.fileName = EndMyMisery[1];
+                FileRead(gridVariables);
                 break;
             default:
                 String error = "";
-                for (String i : args){
+                for (String i : EndMyMisery){
                     error += i + " ";
                 }
-                Print("Invalid argument list:" + error);
-                Print("Expected nothing - for no color and random");
-                Print("Or Expected (c) - for color and random");
-                Print("Or Expected (name of file) - for no color read file");
-                Print("Or Expected (c) (name of file) - for color and read file");
+                Print("Invalid argument list: " + error);
+                Print("Expected nothing - for no color and random job generation");
+                Print("Or Expected (c) - for color and random job generation");
+                Print("Or Expected (name of file) - for no color and jobs read from csv file");
+                Print("Or Expected (c) (name of file) - for color and jobs read from csv file");
                 System.exit(1);
         }
 
-        if (args.length == 0 || (args.length == 1 && color)){
-            numJobs = 5;
-            timeMax = 20;
-            weightMax = 10;
+        if (EndMyMisery.length == 0 || (EndMyMisery.length == 1 && color)){
+            gridVariables.numJobs = 5;
+            gridVariables.timeMax = 20;
+            gridVariables.weightMax = 10;
         }
-        Job[] Jobs = new Job[numJobs];
-        if (args.length > 0){
+        Job[] Jobs = new Job[gridVariables.numJobs];
+        if (EndMyMisery.length > 0){
             int count = 0;
-            while (!jobInput.empty()){
-                Jobs[count] = jobInput.pop();
+            while (!gridVariables.jobInput.empty()){
+                Jobs[count] = gridVariables.jobInput.pop();
                 count++;
             }
         }
-        HashMap<Job, Integer> MaxMap = new HashMap<>(numJobs);
-       if (args.length == 0 || (args.length == 1 && color)){
-           // easy job initiate
+        HashMap<Job, Integer> MaxMap = new HashMap<>( gridVariables.numJobs);
+       if (EndMyMisery.length == 0 || (EndMyMisery.length == 1 && color)){
+           // easy random job initiation
            String name = "";
-           for (int i = 0; i < numJobs; i++) {
-               if (numJobs > 26){
+           for (int i = 0; i <  gridVariables.numJobs; i++) {
+               if ( gridVariables.numJobs > 26){
                    name = "1";
                } else{
                    name = "";
@@ -235,20 +136,20 @@ public class WeightedIntervalS {
                int wrapAround = (26 * (i/26)); // 90 is Z, this wraps around to A after Z
                if (wrapAround > 0){
                    intToChar = intToChar - wrapAround;
-                   wrapAround = wrapAround - 25;
+                   wrapAround = wrapAround - 25*(i/26);
                    name = String.valueOf(wrapAround + 1);
                }
                char letter = (char)intToChar;
                name += letter;
 
                // random start time for a
-               int a = rand.nextInt(timeMax);
+               int a = rand.nextInt( gridVariables.timeMax);
                // generates random length using the subtraction of the start time from maximum time
-               int len = rand.nextInt(timeMax - a) + 1;
+               int len = rand.nextInt( gridVariables.timeMax - a) + 1;
                // start time plus random length equals end time
                int b = a + len;
                // random weight
-               int c = rand.nextInt(weightMax) + 1;
+               int c = rand.nextInt( gridVariables.weightMax) + 1;
                Job temp = new Job(a,b,c); // 2*i, 2*i+3, i+1
                temp.name = String.valueOf(name);
                // add job to array of jobs
@@ -274,7 +175,7 @@ public class WeightedIntervalS {
         Jobs[4].weight = 7;*/
 
         // O(nlog(n))
-        Arrays.sort(Jobs, Comparator.comparing(Job::GetStart));
+        //Arrays.sort(Jobs, Comparator.comparing(Job::GetStart));
         // ^ this puts in nice order, but how much time complexity added? adds 7.2 milliseconds at 10,000 samples
         // O(nlog(n))
         Arrays.sort(Jobs, Comparator.comparing(Job::GetEnd));
@@ -282,7 +183,7 @@ public class WeightedIntervalS {
         // --------------------------------------------------------------------------------------------find p?
         // better way to do this?
         // O(n^2) but in practice will be way less, closer to O(n)
-        for(int i = 0; i < numJobs; i++){
+        for(int i = 0; i <  gridVariables.numJobs; i++){
             int start = Jobs[i].timeStart;
             for(int j = i ; j > -1; j--){
                 if (Jobs[j].timeEnd < start){   // breaks at first compatible index found
@@ -298,7 +199,7 @@ public class WeightedIntervalS {
         MaxMap.put(null, 0); // if null is sent into map, returns max value of 0
         int max1 = 0; // current job value + job.p max value
         int max2 = 0; // 1 index lower than current job's max value
-        for (int j = 1; j < numJobs +1; j++){
+        for (int j = 1; j <  gridVariables.numJobs +1; j++){
             if (MaxMap.get(Jobs[j-1].p) == null){ // max is zero is j doesn't have a compatible index
                 max1 = 0;
             } else{
@@ -308,14 +209,14 @@ public class WeightedIntervalS {
                 max2 = MaxMap.get(Jobs[j-2]);
             }
             int sum = 0;
-//---------------------------------------------------------------------------------------------------j.max scrounging
+//------------------------------this goes through each job's max, and if it includes itself, marks it
             if (Jobs[j-1].weight + max1 > max2){
                 sum = Jobs[j-1].weight + max1;
                 Jobs[j-1].max = Jobs[j-1].p;
                 Jobs[j-1].usesSelf = true;
             } else{
                 sum = max2;
-                if (j >= 2){ // <- maybe not neccessary
+                if (j >= 2){ // <- maybe not necessary
                     Jobs[j-1].max = Jobs[j-2];
                 }
             }
@@ -326,12 +227,13 @@ public class WeightedIntervalS {
                 jobMax = Jobs[j-1];
             }
         }
-
         String message = "";
-        //--------------------------------------------------------------------------------------------------------------------------------checker
+        //------------------------------------------------------------------------- print jobs
         Print("For jobs:");
+        Map<String,Job> jobMap = new HashMap<>();
         for (Job i : Jobs){
             i.Print();
+            jobMap.put(i.name, i);
         }
         // temp traverses the path of greatest weight
         Job temp = jobMax;
@@ -347,20 +249,21 @@ public class WeightedIntervalS {
         }
         //Collections.sort(solutionPath); // sort alphabetically [time complexity?]
         Print(message + " " + String.valueOf(solutionPath));
+        for (String s : solutionPath) {
+            jobMap.get(s).Print();
+        }
 
-       //Print(solutionPath);
         long endTime = System.currentTimeMillis();
         long fin = endTime - startTime;
         Print("\n"+fin+" milliseconds"); //-------------------------------------   time
 
         //                  Grid Printer
-        Print("--------------------------------------------------------------------------------------------------------------------------");
-        String[][] gridArray = new String[timeMax+1][numJobs+1];
+        String[][] gridArray = new String[ gridVariables.timeMax+1][ gridVariables.numJobs+1];
         // initialize bottom row of grid, the x axis of time
-        for (int i = 0; i <=timeMax ; i++){
+        for (int i = 0; i <= gridVariables.timeMax ; i++){
             gridArray[i][0] = String.valueOf(i);
         }
-        int count = numJobs;
+        int count =  gridVariables.numJobs;
         for (Job j: Jobs){
             gridArray[j.timeEnd][count] = String.valueOf(j.name);
             gridArray[j.timeStart][count] = String.valueOf(j.name);
@@ -370,18 +273,17 @@ public class WeightedIntervalS {
             count--;
         }
 
-
-
         StringBuilder gridDisplay = new StringBuilder();
         if (!color){
-            GridBuilder(numJobs,timeMax,gridArray,gridDisplay);
+            GridBuilder(gridVariables.numJobs,gridVariables.timeMax,gridArray,gridDisplay);
         } else{
-            GridBuilderColor(numJobs,timeMax,gridArray,gridDisplay, solutionPath);
+            GridBuilderColor(gridVariables.numJobs,gridVariables.timeMax,gridArray,gridDisplay, solutionPath);
         }
-
-         // gets rid of last extra \n
+        StringBuilder border = new StringBuilder();
+        border.append("-".repeat(Math.max(0, (gridVariables.timeMax * 6) + 2)));
+        Print(border);
         Print(gridDisplay);
-        Print("--------------------------------------------------------------------------------------------------------------------------");
+        Print(border);
     }
 
     public static <T> void Print(T input){
@@ -391,7 +293,7 @@ public class WeightedIntervalS {
         for (int y = numJobs ; y > -1; y--){
             for (int x = 0; x <= timeMax; x++){
                 if (gridArray[x][y] == null){
-                    gridDisplay.append(String.format("%-6s", "[]"));
+                    gridDisplay.append(String.format("%-6s", "  "));
                 } else{
                     gridDisplay.append(String.format("%-6s", gridArray[x][y]));
                 }
@@ -402,12 +304,11 @@ public class WeightedIntervalS {
     }
     public static void GridBuilderColor(int numJobs, int timeMax, String[][] gridArray, StringBuilder gridDisplay, List<String> solutionPath) {
         String currentBox = "";
-        //int currentY = 0;
         int currentX = 0;
         for (int y = numJobs; y > -1; y--) {
             for (int x = 0; x <= timeMax; x++) {
                 if (gridArray[x][y] == null) {
-                    gridDisplay.append(String.format("%-6s", "[]"));
+                    gridDisplay.append(String.format("%-6s", "  "));
                     //System.out.printf("%-6s", "[]");
                 } else {
                     if (y > 0 && solutionPath.contains(gridArray[x][y])) {        //y > 1 && solutionPath.contains(Jobs[y-1].name
@@ -434,47 +335,100 @@ public class WeightedIntervalS {
         }
         gridDisplay.deleteCharAt(gridDisplay.length()-1);
     }
-}
+    public static void FileRead(GridVariables gridVariables){
+        try{
+            String name = gridVariables.fileName;
+            File local = new File(WeightedIntervalS.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
+            String source = local.getParent() + File.separator + name;
+            File address = new File(source);
+            String scannerInput;
+            Scanner fileRead = new Scanner(address);
 
+            while (fileRead.hasNextLine()) {
 
-/*
+                scannerInput = fileRead.nextLine();
+                Scanner lineRead = new Scanner(scannerInput);
+                lineRead.useDelimiter(",");
 
-//                  Grid Printer Color
-        Print("--------------------------------------------------------------------------------------------------------------------------");
-        String[][] gridArray = new String[timeMax+1][numJobs+1];
-        // initialize bottom row of grid, the x axis of time
-        for (int i = 0; i <=timeMax ; i++){
-            gridArray[i][0] = String.valueOf(i);
-        }
-        int count = numJobs;
-        for (Job j: Jobs){
-            gridArray[j.timeEnd][count] = String.valueOf(j.name);
-            gridArray[j.timeStart][count] = String.valueOf(j.name);
-            for (int i = j.timeStart + 1; i < j.timeEnd; i++){
-                gridArray[i][count] = String.valueOf(j.weight);
-            }
-            count--;
-        }
-        StringBuilder gridDisplay = new StringBuilder();
-        for (int y = numJobs ; y > -1; y--){
-            for (int x = 0; x <= timeMax; x++){
-                if (gridArray[x][y] == null){
-                    //gridDisplay.append(String.format("%-6s", "[]"));
-                    System.out.printf("%-6s","[]");
-                } else{
-                    //gridDisplay.append(String.format("%-6s", gridArray[x][y]));
-                    if (y > 1 && solutionPath.contains(Jobs[y-1].name)){        //y > 1 && solutionPath.contains(Jobs[y-1].name
-                        System.out.printf("%-6s", ANSI_BLACK_BACKGROUND+ ANSI_WHITE + gridArray[x][y]+  "     " + ANSI_RESET );
-                    } else{
-                        System.out.printf("%-6s", gridArray[x][y]);
+                int fieldIndex = 0; // keeps track of what to put in Course object through the switch case
+
+                while (lineRead.hasNextLine()){
+                    scannerInput = lineRead.next();
+                    switch (fieldIndex){
+                        case 0:
+                            Job temp = new Job();
+                            temp.timeStart = Integer.parseInt(scannerInput);
+                            gridVariables.jobInput.push(temp);
+                            fieldIndex++;
+                            gridVariables.numJobs++;
+                            break;
+                        case 1:
+                            gridVariables.jobInput.peek().timeEnd = Integer.parseInt(scannerInput);
+                            if (gridVariables.jobInput.peek().timeEnd > gridVariables.timeMax){
+                                gridVariables.timeMax = gridVariables.jobInput.peek().timeEnd;
+                            }
+                            else if (gridVariables.jobInput.peek().timeEnd < gridVariables.jobInput.peek().timeStart){
+                                System.out.println("Error: job " + gridVariables.jobInput.size() + " ends before it starts");
+                                //System.out.println("Start time " + gridVariables.jobInput.peek().timeEnd + " versus end time " + gridVariables.jobInput.peek().timeStart);
+                                System.exit(1);
+                            }
+                            else if (gridVariables.jobInput.peek().timeEnd == gridVariables.jobInput.peek().timeStart){
+                                System.out.println("Error: job " + gridVariables.jobInput.size() + " start time and end time are equal");
+                                //System.out.println("Start time " + gridVariables.jobInput.peek().timeEnd + " equals end time " + gridVariables.jobInput.peek().timeStart);
+                                System.exit(1);
+                            }
+                            fieldIndex++;
+                            break;
+                        case 2:
+                            gridVariables.jobInput.peek().weight = Integer.parseInt(scannerInput);
+                            fieldIndex++;
+                            break;
                     }
                 }
+
+                if ( gridVariables.numJobs > 26){
+                    name = "1";
+                } else{
+                    name = "";
+                }
+                int intToChar = 65 + gridVariables.numJobs - 1;
+                int wrapAround = (26 * ((gridVariables.numJobs - 1)/26)); // 90 is Z, this wraps around to A after Z
+                if (wrapAround > 0){
+                    intToChar = intToChar - wrapAround;
+                    wrapAround = wrapAround - 25*((gridVariables.numJobs - 1)/26);
+                    name = String.valueOf(wrapAround + 1);
+                }
+                char letter = (char)intToChar;
+                name += letter;
+                gridVariables.jobInput.peek().name = name;
             }
-            System.out.println("");
+            fileRead.close();
+        }catch(FileNotFoundException e) {
+            String error = "File ";
+            error += gridVariables.fileName + " not found";
+            System.out.println(error);
+            System.exit(1);
+        } catch (URISyntaxException e) {
+            System.out.println("URI Syntax Exeption");
+            e.printStackTrace();
         }
-        //gridDisplay.deleteCharAt(gridDisplay.length()-1); // gets rid of last extra \n
-       // Print(gridDisplay);
-        Print("--------------------------------------------------------------------------------------------------------------------------");
     }
+}
+/*
+
+if ( gridVariables.numJobs > 26){
+                   name = "1";
+               } else{
+                   name = "";
+               }
+               int intToChar = 65 + i;
+               int wrapAround = (26 * (i/26)); // 90 is Z, this wraps around to A after Z
+               if (wrapAround > 0){
+                   intToChar = intToChar - wrapAround;
+                   wrapAround = wrapAround - 25*(i/26);
+                   name = String.valueOf(wrapAround + 1);
+               }
+               char letter = (char)intToChar;
+               name += letter;
 
  */
