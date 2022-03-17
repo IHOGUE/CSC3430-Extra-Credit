@@ -1,8 +1,9 @@
 DISPLAY_GRID = true
 GRID_COLOR = true
+PRINT_JOBS = false
 // leave "" for random generation. otherwise, enter file name between quotes: "example.csv"
 LOAD_FILE_NAME = ""
 // these will only take effect for random generation
 NUMBER_OF_JOBS = 8
-MAXIMUM_TIME = 35
+MAXIMUM_TIME = 20
 MAXIMUM_WEIGHT = 10
