@@ -4,7 +4,6 @@
 A work by: Isaiah Hogue
  
 ## Introduction
-*Describe what your project is about and what language you used*
  
 The project is written in Java and implements the Dynamic Programming Weighted Interval Scheduling Algorithm. Specifically, the bottom-up dynamic programming (unwind recursion) that uses iteration is implemented. I've also created a method of keeping track of the jobs that make up the maximum weight subset of jobs, and the ability to print the grid of jobs and color highlight the solution on the grid. Most aspects of the program are configured in the `settings.txt` file.
  
@@ -35,12 +34,12 @@ These values are stored in the `GridVariables` class
  
 - After all of the `Job` objects are created they are stored in an array called `Jobs`, and a clone is made of the array named `unsortedJobs`. This is to be able to preserve the original order and display it as a grid at the end. `Jobs` is then sorted by end time using the `Arrays.sort` method using an O(nlogn) algorithm.
  
-- After sorting by end time, a loop goes through each job and finds "p", the first compatible job available, where compatible means there is no time conflict. Then a HashMap called `MaxMap` (<`Job`,`Integer`>) is created, and will be used to store the max value for each job. This is how memoization is implemented to make the algorithm efficient. Then a List `solutionPath` <`String`> is created to keep track of the subset of total jobs which make up the solution.
+- After sorting by end time, a loop goes through each job and finds "p", the first compatible job available with a lower end time, where compatible means there is no time conflict. Then a HashMap called `MaxMap` (<`Job`,`Integer`>) is created, and will be used to store the max value for each job. This is how memoization is implemented to make the algorithm efficient. Then a List `solutionPath` <`String`> is created to keep track of the subset of total jobs which make up the solution.
  
 *The Heart of the Algorithm*
  
 A loop is entered, starting at `j = 1` until `NUMBER_OF_JOBS`, and for every job, it stores the higher value between `max1` or `max2` into `MaxMap`, and sets the current job's `maxWeightJob` to either the job.p or the job at the index of the current job - 1.
-- `max1`: The weight of the current job + the max value of the job.p (the first compatible job)
+- `max1`: The weight of the current job + the max value of the job.p (the first compatible job with a lower end time)
 - `max2`: The max value of the job one index below the current job
  
 Additionally, if `max1` is higher than `max2`, then a `boolean` value `usesSelf` inside of the current job will be marked true. Therefore, only jobs that are part of the solution will be marked true.
@@ -59,7 +58,11 @@ Finally, depending on what `DISPLAY_GRID` and `GRID_COLOR` are set to, either th
 ## User Manual
 *Once a person clones this into their computer how the person is supposed to run the program, add screenshots showing how your program works, also add here the link to the Youtube video showing the program running*
  
-To run the program, execute the jar file from the command line. The following settings in the `settings.txt` file control what the program will do:
+To run the program, execute the jar file from the command line. 
+
+`java -jar WeightedIntervalScheduling.jar`
+
+The following settings in the `settings.txt` file control what the program will do:
  
 `DISPLAY_GRID`
  
@@ -95,4 +98,4 @@ The lower bound is always 0, so this setting configures the upper bound for the 
  
 *Misc. notes:*
  
-For a 15-inch screen, 39 is the max value for `MAXIMUM_TIME` before the display extends past the terminal window in full screen mode. Additionally, while the display can handle a large amount of jobs, the usefulness of the display diminishes the more time you spend scrolling. For a large `MAXIMUM_TIME` value and large number of jobs, set `LOAD_FILE_NAME` to `""`.
+For a 15-inch screen, 39 is the max value for `MAXIMUM_TIME` before the display extends past the terminal window in full screen mode. Additionally, while the display can handle a large amount of jobs, the usefulness of the display diminishes the more time you spend scrolling. For a large `MAXIMUM_TIME` value and large number of jobs, set `DISPLAY_GRID` and `PRINT_JOBS` to false.
