@@ -1,6 +1,6 @@
 DISPLAY_GRID = true
 GRID_COLOR = true
-PRINT_JOBS = false
+PRINT_JOBS = true
 // leave "" for random generation. otherwise, enter file name between quotes: "example.csv"
 LOAD_FILE_NAME = ""
 // these will only take effect for random generation

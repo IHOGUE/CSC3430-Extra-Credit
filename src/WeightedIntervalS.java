@@ -54,7 +54,7 @@ public class WeightedIntervalS {
 
         Random rand = new Random();
         boolean color = false;
-        boolean displayGrid = true;
+        boolean displayGrid = false;
         boolean printJobs = false;
 
 
@@ -224,7 +224,6 @@ public class WeightedIntervalS {
 
         Job[] unsortedJobs = Jobs.clone(); // I assume 0(n)
         Arrays.sort(unsortedJobs, Comparator.comparing(Job::GetName)); // O(nlog(n))
-        long startTime = System.currentTimeMillis();
         Arrays.sort(Jobs, Comparator.comparing(Job::GetEnd)); // O(nlog(n))
         // -------------------------find p-------------------------------------------------------------------
         // better way to do this?
@@ -272,8 +271,6 @@ public class WeightedIntervalS {
                 jobMax = Jobs[j-1];
             }
         }
-        long endTime = System.currentTimeMillis();
-        long fin = endTime - startTime;
         String message = "";
         //------------------------------------------------------------------------- print jobs
         Print("For " + gridVariables.numJobs + " jobs:");
@@ -301,10 +298,7 @@ public class WeightedIntervalS {
         for (String s : solutionPath) {
             jobMap.get(s).Print();
         }
-
-
-        Print("\n"+fin+" milliseconds to sort jobs by end time, calculate every p value, and find value of max weight"); //-------------------------------------   time
-
+        Print("\n");
         //                  Grid Printer
         if (displayGrid){
             String[][] gridArray = new String[ gridVariables.timeMax+1][ gridVariables.numJobs+1];
