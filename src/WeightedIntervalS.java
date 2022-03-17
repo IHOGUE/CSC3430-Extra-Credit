@@ -1,7 +1,7 @@
 import java.net.URISyntaxException;
 import java.util.*;
-import java.io.File;  // Import the File class <- necessary?
-import java.io.FileNotFoundException;  // Import this class to handle errors <- necessary?
+import java.io.File;
+import java.io.FileNotFoundException;
 
 
 class Job{
@@ -105,6 +105,7 @@ public class WeightedIntervalS {
             fileRead.close();
         }catch(FileNotFoundException e) {
             System.out.println("Error: settings.txt not found");
+            System.exit(1);
         } catch (URISyntaxException e) {
             System.out.println("URI Syntax Exeption");
             e.printStackTrace();
@@ -220,7 +221,7 @@ public class WeightedIntervalS {
                Jobs[i] = temp;
            }
        }
-       
+
         Job[] unsortedJobs = Jobs.clone(); // I assume 0(n)
         Arrays.sort(unsortedJobs, Comparator.comparing(Job::GetName)); // O(nlog(n))
         long startTime = System.currentTimeMillis();
