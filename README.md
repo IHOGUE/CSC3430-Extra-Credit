@@ -6,17 +6,19 @@ A work by: Isaiah Hogue
 ## Introduction
  
 The project is written in Java and implements the Dynamic Programming Weighted Interval Scheduling Algorithm. Specifically, the bottom-up dynamic programming (unwind recursion) that uses iteration is implemented. I've also created a method of keeping track of the jobs that make up the maximum weight subset of jobs, and the ability to print the grid of jobs and color highlight the solution on the grid. Most aspects of the program are configured in the `settings.txt` file.
+
+![Alt text](https://github.com/IHOGUE/CSC3430-Extra-Credit/blob/main/out/artifacts/WeightedIntervalScheduling_jar/Output.png?raw=true "three Result")
  
 ## Requirements
  
 This program was written and compiled with JDK 17, so Java Runtime Environment 8 and above should work. No additional libraries were used.
  
 ## Code Guide
-The program is broken into four parts: Load the variables from `settings.txt`, generate jobs, run the algorithm, display the results.
+The program is broken into four parts: load the variables from `settings.txt`, generate jobs, run the algorithm, and display the results.
  
 #### Load Settings
  
-Reads the `settings.txt` file inside the same directory as the jar file. The file is parsed and values are loaded into their respective variables The User manual will go into detail about how the `settings.txt` file influences the program.
+Reads the `settings.txt` file inside the same directory as the jar file. The file is parsed and values are loaded into their respective variables. The User Manual will go into detail about how the `settings.txt` file influences the program.
  
 #### Generate Jobs
  
@@ -28,7 +30,7 @@ If the jobs are being read from a given .csv file, then the file will be parsed 
  
 - Weight is a random number between 1 and the value of `MAXIMUM_WEIGHT`
  
-These values are stored in the `GridVariables` class
+These values are stored in the `GridVariables` class.
  
 #### Bottom-up Dynamic Programming (Unwind Recursion) Algorithm
  
@@ -49,16 +51,15 @@ A variable `numMax` keeps track of the highest weight recorded during the loop.
  
 #### Display the Results
  
-Once `numMax` has stored the solution (maximum weight given jobs), a HashMap `jobMap` (<`String`,`Job`>) is created, and every Job is stored in the HashMap by its name, and if `PRINT_JOBS` is set to true, then every job is printed as well. Then a `Job` temp is created and set to the job with the highest max value. Then `while(temp != null)` is entered, and if `temp.usesSelf` is set to true, add its name to `solutionPath`. Then set `temp = temp.maxWeightJob`, and the loop continues until `temp == null`.
+Once `numMax` has stored the solution (maximum weight given jobs), a HashMap `jobMap` (<`String`,`Job`>) is created, and every job is stored in the HashMap by its name, and if `PRINT_JOBS` is set to true, then every job is printed as well. Then a `Job` `temp` is created and set to the job with the highest max value. Then `while(temp != null)` is entered, and if `temp.usesSelf` is set to true, add its name to `solutionPath`. Then set `temp = temp.maxWeightJob`, and the loop continues until `temp == null`.
  
- Then a message prints the maximum weight value found, the list of jobs that make up that max weight, and then prints out each job's value (start time, end time, weight, etc.)
+ After this, a message prints the maximum weight value found, the list of jobs `solutionPath` that make up that max weight, and then prints out each job's value (start time, end time, weight, etc.) using each job's name in `solutionPath` as the key to find the matching job in `jobMap`.
  
 Finally, depending on what `DISPLAY_GRID` and `GRID_COLOR` are set to, either the program ends or the program constructs and displays a grid of the jobs to the terminal. If `GRID_COLOR` is set to true, then the jobs that make up the solution will be highlighted in yellow. The grid's dimensions are (x = time from 0 to highest end time value)(y = number of jobs).
  
 ## User Manual
-*Once a person clones this into their computer how the person is supposed to run the program, add screenshots showing how your program works, also add here the link to the Youtube video showing the program running*
- 
-To run the program, execute the jar file from the command line. 
+
+To run the program, download and unzip `WeightedIntervalScheduling.zip` and execute the jar file from the command line. 
 
 `java -jar WeightedIntervalScheduling.jar`
 
@@ -85,7 +86,7 @@ Enter the file name between the double quotes. If you want to generate a random 
  
 `NUMBER_OF_JOBS`
  
-Decides how many random Jobs to generate.
+Decides how many random jobs to generate.
  
 `MAXIMUM_TIME`
  
